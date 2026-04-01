@@ -77,22 +77,22 @@ if mode == "Single Prediction":
       feature_cols = list(feature_cols)
 
         # Convert mean_values safely
-        if hasattr(mean_values, "values"):
-            base_values = mean_values.values
-        else:
-            base_values = np.array(mean_values)
+      if hasattr(mean_values, "values"):
+        base_values = mean_values.values
+      else:
+        base_values = np.array(mean_values)
 
-        input_full = base_values.reshape(1, -1).copy()
+      input_full = base_values.reshape(1, -1).copy()
 
-        # Replace selected features safely
-        for feature, value in input_values.items():
-            if feature in feature_cols:
-                idx = feature_cols.index(feature)
+      # Replace selected features safely
+      for feature, value in input_values.items():
+        if feature in feature_cols:
+            idx = feature_cols.index(feature)
 
-                try:
-                    input_full[0, idx] = float(value)
-                except:
-                    input_full[0, idx] = float(base_values[idx])
+            try:
+                input_full[0, idx] = float(value)
+            except:
+                input_full[0, idx] = float(base_values[idx])
 
         # Scale
         input_scaled = scaler.transform(input_full)
