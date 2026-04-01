@@ -7,7 +7,7 @@ import joblib
 # =========================
 # LOAD FILES
 # =========================
-model = load_model('https://github.com/Shlock24/Early-Sepsis-Prediction-Model/blob/main/sepsis_final_model.keras')
+model = load_model('sepsis_final_model.keras')
 scaler = joblib.load('scaler.pkl')
 feature_cols = joblib.load('features.pkl')
 mean_values = joblib.load('mean_values.pkl')
