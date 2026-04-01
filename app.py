@@ -10,13 +10,14 @@ import joblib
 model = load_model('sepsis_final_model.keras')
 scaler = joblib.load('scaler.pkl')
 feature_cols = joblib.load('features.pkl')
+feature_cols = list(feature_cols)  # ✅ FIX
 mean_values = joblib.load('mean_values.pkl')
 
 # FIX dtype issue
-mean_values = mean_values.astype(float)
+if hasattr(mean_values, "astype"):
+    mean_values = mean_values.astype(float)
 
 threshold = float(open('threshold.txt').read())
-#threshold = 0.5
 
 # =========================
 # PAGE CONFIG
@@ -71,14 +72,23 @@ if mode == "Single Prediction":
     # -------- PREDICTION --------
     if st.button("🔍 Predict Sepsis Risk"):
 
-        # Start with mean values
-        input_full = mean_values.values.reshape(1, -1)
+        # ✅ SAFE input creation (cloud-compatible)
+        if hasattr(mean_values, "values"):
+            base_values = mean_values.values
+        else:
+            base_values = np.array(mean_values)
 
-        # Replace selected features
+        input_full = base_values.reshape(1, -1).copy()
+
+        # Replace selected inputs
         for feature, value in input_values.items():
             if feature in feature_cols:
                 idx = feature_cols.index(feature)
-                input_full[0][idx] = value
+
+                try:
+                    input_full[0, idx] = float(value)
+                except:
+                    input_full[0, idx] = float(base_values[idx])
 
         # Scale
         input_scaled = scaler.transform(input_full)
@@ -89,7 +99,7 @@ if mode == "Single Prediction":
         # Predict
         prob = model.predict(sequence)[0][0]
 
-        # -------- COLOR OUTPUT --------
+        # -------- OUTPUT --------
         if prob > 0.7:
             st.error(f"🔴 HIGH RISK: Sepsis Likely ({prob:.2f})")
         elif prob > threshold:
@@ -97,7 +107,6 @@ if mode == "Single Prediction":
         else:
             st.success(f"🟢 LOW RISK: No Sepsis ({prob:.2f})")
 
-        # Progress bar
         st.progress(float(prob))
 
 # =========================
@@ -144,4 +153,3 @@ else:
 # =========================
 st.markdown("---")
 st.markdown("Developed using LSTM for Early Sepsis Detection")
-
