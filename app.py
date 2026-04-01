@@ -12,6 +12,8 @@ scaler = joblib.load('scaler.pkl')
 feature_cols = joblib.load('features.pkl')
 mean_values = joblib.load('mean_values.pkl')
 
+feature_cols = list(feature_cols)   
+
 # FIX dtype issue
 mean_values = mean_values.astype(float)
 
@@ -72,13 +74,25 @@ if mode == "Single Prediction":
     if st.button("🔍 Predict Sepsis Risk"):
 
         # Start with mean values
-        input_full = mean_values.values.reshape(1, -1)
+      feature_cols = list(feature_cols)
 
-        # Replace selected features
+        # Convert mean_values safely
+        if hasattr(mean_values, "values"):
+            base_values = mean_values.values
+        else:
+            base_values = np.array(mean_values)
+
+        input_full = base_values.reshape(1, -1).copy()
+
+        # Replace selected features safely
         for feature, value in input_values.items():
             if feature in feature_cols:
                 idx = feature_cols.index(feature)
-                input_full[0][idx] = value
+
+                try:
+                    input_full[0, idx] = float(value)
+                except:
+                    input_full[0, idx] = float(base_values[idx])
 
         # Scale
         input_scaled = scaler.transform(input_full)
